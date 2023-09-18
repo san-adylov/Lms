@@ -1,10 +1,11 @@
 package com.example.lms.configs.security;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 @RequiredArgsConstructor
-public class JWTFilter {
-
+public class JWTService {
 
 }
