@@ -1,6 +1,7 @@
 package com.example.lms.configs.security;
 
 
+import com.example.lms.exeptions.NotFoundException;
 import com.example.lms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -41,4 +42,3 @@ public class ApplicationConfig {
   }
 }
 
-}
