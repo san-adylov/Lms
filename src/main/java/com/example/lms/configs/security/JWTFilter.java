@@ -8,7 +8,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,57 +25,57 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
 
-  private final JWTService jwtService;
-  private final UserRepository userRepository;
+    private final JWTService jwtService;
+    private final UserRepository userRepository;
 
-  @Override
-  protected void doFilterInternal(
-      @NonNull HttpServletRequest request,
-      @NonNull HttpServletResponse response,
-      @NonNull FilterChain filterChain) throws ServletException, IOException {
-    final String tokenHeader = request.getHeader("Authorization");
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+        final String tokenHeader = request.getHeader("Authorization");
 
-    if (isValidBearerToken(tokenHeader)) {
-      String token = extractToken(tokenHeader);
+        if (isValidBearerToken(tokenHeader)) {
+            String token = extractToken(tokenHeader);
 
-      if (StringUtils.hasText(token)) {
-        try {
-          String username = jwtService.validateToken(token);
-          User user = userRepository.getUserByEmail(username)
-              .orElseThrow(() -> {
-                log.error("User with email: %s not found".formatted(username));
-                return new NotFoundException("User with email: %s not found".formatted(username));
-              });
+            if (StringUtils.hasText(token)) {
+                try {
+                    String username = jwtService.validateToken(token);
+                    User user = userRepository.getUserByEmail(username)
+                            .orElseThrow(() -> {
+                                log.error("User with email: %s not found".formatted(username));
+                                return new NotFoundException("User with email: %s not found".formatted(username));
+                            });
 
-          setAuthentication(user);
+                    setAuthentication(user);
 
-        } catch (JWTVerificationException e) {
-          response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid token!");
-          return;
+                } catch (JWTVerificationException e) {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid token!");
+                    return;
+                }
+            }
         }
-      }
+
+        filterChain.doFilter(request, response);
     }
 
-    filterChain.doFilter(request, response);
-  }
+    private boolean isValidBearerToken(String tokenHeader) {
+        return tokenHeader != null && tokenHeader.startsWith("Bearer ");
+    }
 
-  private boolean isValidBearerToken(String tokenHeader) {
-    return tokenHeader != null && tokenHeader.startsWith("Bearer ");
-  }
+    private String extractToken(String tokenHeader) {
+        return tokenHeader.substring(7);
+    }
 
-  private String extractToken(String tokenHeader) {
-    return tokenHeader.substring(7);
-  }
-
-  private void setAuthentication(User user) {
-    SecurityContextHolder.getContext()
-        .setAuthentication(
-            new UsernamePasswordAuthenticationToken(
-                user.getUsername(),
-                null,
-                user.getAuthorities()
-            )
-        );
-  }
+    private void setAuthentication(User user) {
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                user.getUsername(),
+                                null,
+                                user.getAuthorities()
+                        )
+                );
+    }
 
 }
