@@ -48,23 +48,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (!userRepository.existsUserByEmail(signInRequest.email())) {
             log.error
                     (("User with email: %s not found " +
-                    "\nMethod name: signIn").formatted(signInRequest.email()));
+                            "\nMethod name: signIn").formatted(signInRequest.email()));
             throw new NotFoundException("User with email: %s not found".formatted(signInRequest.email()));
         }
-        User user = jwtService.getAuthentication();
+        User user = userRepository.getUserByEmail(signInRequest.email()).orElseThrow(
+                () -> {
+                    log.error("User with email %s not found".formatted(signInRequest.email()));
+                    return new NotFoundException("User with email %s not found".formatted(signInRequest.email()));
+                }
+        );
         if (!passwordEncoder.matches(signInRequest.password(), user.getPassword())) {
             log.error("Password incorrect!" +
                     "\nMethod name: signIn");
             throw new BadRequestException("Password incorrect!");
         }
-        Student student = studentRepository.getStudentsByUserId(user.getId())
-                .orElseThrow(
-                        () -> {
-                            log.error(("Student with userID: %s not found" +
-                                    "\nMethod name: signIn").formatted(user.getId()));
-                            return new NotFoundException("Student not found");
-                        }
-                );
+        Student student = studentRepository.getStudentsByUserId(user.getId());
         if (user.getRole().equals(Role.STUDENT) && student.isBlocked()) {
             log.error("You have been blocked and you do not have access to our system!" +
                     "\nMethod name: signIn");
