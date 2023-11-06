@@ -2,6 +2,7 @@ package com.example.lms.exeptions.handler;
 
 import com.example.lms.dto.response.simple.ExceptionResponse;
 import com.example.lms.exeptions.BadCredentialException;
+import com.example.lms.exeptions.BadRequestException;
 import com.example.lms.exeptions.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,6 +27,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ExceptionResponse handlerBadCredential(BadCredentialException e) {
+        return ExceptionResponse
+                .builder()
+                .message(e.getMessage())
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .build();
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    ExceptionResponse handlerBadRequest (BadRequestException e){
         return ExceptionResponse
                 .builder()
                 .message(e.getMessage())
