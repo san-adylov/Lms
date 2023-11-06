@@ -23,7 +23,8 @@ import java.util.Date;
 public class JWTService {
 
     @Value("${secret_key}")
-    private static String SECRET_KEY;
+    private  String SECRET_KEY;
+
     private final UserRepository userRepository;
 
     public String generateToken(UserDetails userDetails) {
@@ -31,21 +32,21 @@ public class JWTService {
                 .withClaim("username", userDetails.getUsername())
                 .withIssuedAt(new Date())
                 .withExpiresAt(Date.from(ZonedDateTime.now().plusWeeks(2).toInstant()))
-                .sign(Algorithm.HMAC512(SECRET_KEY));
+                .sign(Algorithm.HMAC256(SECRET_KEY));
     }
+
     public String validateToken(String token) {
         JWTVerifier jwtVerifier =
-                JWT.require(Algorithm.HMAC512(SECRET_KEY))
+                JWT.require(Algorithm.HMAC256(SECRET_KEY))
                         .build();
         DecodedJWT jwt = jwtVerifier.verify(token);
         return jwt.getClaim("username").asString();
     }
 
-    public User getAuthentication() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.getUserByEmail(username).orElseThrow(() -> {
-            log.error("User with email: %s not found".formatted(username));
-            return new NotFoundException("User with email: %s not found".formatted(username));
-        });
+    public User getAuthenticationUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.warn(email);
+        return userRepository.getUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User with email: %s not found".formatted(email)));
     }
 }

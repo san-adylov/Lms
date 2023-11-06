@@ -1,5 +1,4 @@
-package com.example.lms.configs.security;
-
+package com.example.lms.config.security;
 
 import com.example.lms.exeptions.NotFoundException;
 import com.example.lms.repository.UserRepository;
@@ -14,8 +13,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@EnableWebSecurity
 @Configuration
+@EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class ApplicationConfig {
@@ -25,7 +24,7 @@ public class ApplicationConfig {
   @Bean
   public UserDetailsService userDetailsService() {
     return username -> userRepository.getUserByEmail(username).orElseThrow(
-        () -> new NotFoundException("User with email: %s not found".formatted(username)));
+            () -> new NotFoundException("User with email: %s not found".formatted(username)));
   }
 
   @Bean
@@ -41,4 +40,3 @@ public class ApplicationConfig {
     return daoAuthenticationProvider;
   }
 }
-

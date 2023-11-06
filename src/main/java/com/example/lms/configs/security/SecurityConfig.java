@@ -13,37 +13,34 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-@EnableWebSecurity
 @Configuration
+@EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JWTFilter jwtFilter;
-
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> {
-                    cors.configurationSource(
-                            request -> {
-                                var corsConfiguration = new CorsConfiguration();
-                                corsConfiguration.addAllowedHeader("*");
-                                corsConfiguration.addAllowedOrigin("*");
-                                corsConfiguration.addAllowedMethod("*");
-                                return corsConfiguration;
-                            }
-                    );
-                }).csrf(AbstractHttpConfigurer::disable)
+        http.cors(cors -> cors.configurationSource(request -> {
+                    var corsConfiguration = new CorsConfiguration();
+                    corsConfiguration.addAllowedOrigin("*");
+                    corsConfiguration.addAllowedMethod("*");
+                    corsConfiguration.addAllowedHeader("*");
+                    return corsConfiguration;
+                }))
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                         authorizeHttpRequests
                                 .requestMatchers(
                                         "/",
-                                        "api/auth/**",
-                                        "swagger-ui/",
+                                        "/api/v1/auth/**",
+                                        "/swagger-ui/**",
                                         "v3/api-docs/**",
-                                        "/auth/**")
+                                        "/api/**"
+                                )
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
