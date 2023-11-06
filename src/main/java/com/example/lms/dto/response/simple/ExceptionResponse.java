@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 @Builder
 public record ExceptionResponse(
         String message,
-        HttpStatus httpStatus
+        HttpStatus httpStatus,
+
+        String className
 ) {
 }

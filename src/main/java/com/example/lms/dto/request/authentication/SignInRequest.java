@@ -1,5 +1,6 @@
 package com.example.lms.dto.request.authentication;
 
+import jakarta.validation.constraints.Email;
 import lombok.Builder;
 
 @Builder
