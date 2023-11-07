@@ -3,6 +3,7 @@ package com.example.lms.service.impl;
 import com.example.lms.configs.security.JWTService;
 import com.example.lms.dto.request.authentication.SignInRequest;
 import com.example.lms.dto.response.authentication.AuthenticationResponse;
+import com.example.lms.dto.response.simple.SimpleResponse;
 import com.example.lms.entities.Instructor;
 import com.example.lms.entities.Student;
 import com.example.lms.entities.User;
@@ -14,11 +15,19 @@ import com.example.lms.repository.InstructorRepository;
 import com.example.lms.repository.StudentRepository;
 import com.example.lms.repository.UserRepository;
 import com.example.lms.service.AuthenticationService;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.net.PasswordAuthentication;
 
@@ -28,7 +37,14 @@ import java.net.PasswordAuthentication;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
+    @Value("${spring.email.username}")
+    private String fromEmail;
+
     private final JWTService jwtService;
+
+    private final JavaMailSender javaMailSender;
+
+    private final TemplateEngine templateEngine;
 
     private final UserRepository userRepository;
 
@@ -37,6 +53,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final StudentRepository studentRepository;
 
     private final InstructorRepository instructorRepository;
+
 
     @Override
     public AuthenticationResponse signIn(SignInRequest signInRequest) {
@@ -92,6 +109,36 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .token(token)
                 .email(user.getEmail())
                 .role(user.getRole())
+                .build();
+    }
+
+    @Override
+    public SimpleResponse sendPasswordToEmail(String email, String link) throws MessagingException {
+        User user = userRepository.getUserByEmail(email).orElseThrow(
+                () -> {
+                    log.error("User with email address %s is not registered".formatted(email));
+                    return new NotFoundException("User with email address %s is not registered".formatted(email));
+                });
+        String emailContent = link + "/" + user.getId();
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message,true,"UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(email);
+            helper.setSubject("Password recovery");
+
+            Context context = new Context();
+            context.setVariable("link",emailContent);
+            String htmlContent = templateEngine.process("forgotPassword",context);
+            helper.setText(htmlContent,true);
+            javaMailSender.send(message);
+
+        }catch (MessagingException e) {
+            throw new MessagingException();
+        }
+        return SimpleResponse.builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Success")
                 .build();
     }
 }
