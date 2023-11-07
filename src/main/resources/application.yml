@@ -7,5 +7,7 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  email:
+    username: san
 
 secret_key: LMS
