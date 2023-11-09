@@ -21,9 +21,12 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -43,8 +46,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JWTService jwtService;
 
-    private final JavaMailSender javaMailSender;
-
     private final TemplateEngine templateEngine;
 
     private final UserRepository userRepository;
@@ -54,6 +55,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final StudentRepository studentRepository;
 
     private final InstructorRepository instructorRepository;
+
+    @Bean
+    private JavaMailSender javaMailSender(){
+        return new JavaMailSenderImpl();
+    }
 
 
     @Override
@@ -122,7 +128,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 });
         String emailContent = link + "/" + user.getId();
         try {
-            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessage message = javaMailSender().createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message,true,"UTF-8");
             helper.setFrom(fromEmail);
             helper.setTo(email);
@@ -132,7 +138,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             context.setVariable("link",emailContent);
             String htmlContent = templateEngine.process("forgotPassword",context);
             helper.setText(htmlContent,true);
-            javaMailSender.send(message);
+            javaMailSender().send(message);
 
         }catch (MessagingException e) {
             throw new MessagingException();
