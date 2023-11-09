@@ -1,6 +1,7 @@
 package com.example.lms.service.impl;
 
 import com.example.lms.configs.security.JWTService;
+import com.example.lms.dto.request.authentication.RecoveryPasswordRequest;
 import com.example.lms.dto.request.authentication.SignInRequest;
 import com.example.lms.dto.response.authentication.AuthenticationResponse;
 import com.example.lms.dto.response.simple.SimpleResponse;
@@ -140,5 +141,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .httpStatus(HttpStatus.OK)
                 .message("Success")
                 .build();
+    }
+
+    @Override
+    public SimpleResponse recoveryPassword(RecoveryPasswordRequest recoveryPasswordRequest) {
+        User user = userRepository.findById(recoveryPasswordRequest.userId()).orElseThrow(() -> {
+            log.error(String.format("Пользователь с идентификатором: %s не найден", recoveryPasswordRequest.userId()));
+            return new NotFoundException(
+                    String.format("Пользователь с идентификатором: %s не найден", recoveryPasswordRequest.userId()));
+        });
+        if (recoveryPasswordRequest.password().equals(recoveryPasswordRequest.repeatPassword())) {
+            user.setPassword(passwordEncoder.encode(recoveryPasswordRequest.password()));
+            log.info("пароль восстановления");
+            return SimpleResponse.builder()
+                    .httpStatus(HttpStatus.OK)
+                    .message("Успешно")
+                    .build();
+        } else {
+            log.error("Пароли должны совпадать друг с другом");
+            throw new BadRequestException("Пароли должны совпадать друг с другом");
+        }
     }
 }
