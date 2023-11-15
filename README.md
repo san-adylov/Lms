@@ -1,1 +1,1 @@
-![](C:\Users\sanjj\IdeaProjects\Lms.v1\diagramm.png)diagram.png
+![Image alt](https://github.com/SanzharProfProga/Lms/raw/master/./diagramm.png)
